@@ -1,2 +1,3 @@
-# container
-Open source container images
+# Container
+
+Open source container images for running applications and services.
