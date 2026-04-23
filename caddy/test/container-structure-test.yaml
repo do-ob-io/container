@@ -1,0 +1,45 @@
+schemaVersion: '2.0.0'
+
+# Declarative tests for the built Caddy container image.
+# Run via GoogleContainerTools/container-structure-test.
+# See: https://github.com/GoogleContainerTools/container-structure-test
+
+metadataTest:
+  # container-structure-test only reliably matches TCP exposedPorts; the
+  # Containerfile also exposes 443/udp (HTTP/3), verified separately via
+  # `docker inspect` if needed.
+  exposedPorts: ['80', '443']
+  entrypoint: ['/usr/bin/caddy']
+  cmd: ['run', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile']
+  user: 'nonroot'
+
+fileExistenceTests:
+  - name: 'caddy binary is installed'
+    path: '/usr/bin/caddy'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: 'Caddyfile is copied'
+    path: '/etc/caddy/Caddyfile'
+    shouldExist: true
+  - name: 'index.html is copied'
+    path: '/usr/share/caddy/index.html'
+    shouldExist: true
+
+fileContentTests:
+  - name: 'Caddyfile declares file_server'
+    path: '/etc/caddy/Caddyfile'
+    expectedContents: ['file_server']
+  - name: 'index.html contains expected body'
+    path: '/usr/share/caddy/index.html'
+    expectedContents: ['do-ob Caddy Works!']
+
+commandTests:
+  - name: 'caddy reports a version'
+    command: '/usr/bin/caddy'
+    args: ['version']
+    expectedOutput: ['.+']
+    exitCode: 0
+  - name: 'caddy validates its config'
+    command: '/usr/bin/caddy'
+    args: ['validate', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile']
+    exitCode: 0

@@ -1,4 +1,4 @@
-# hadolint global ignore=DL3007
+# hadolint global ignore=DL3007,DL3018
 FROM cgr.dev/chainguard/wolfi-base:latest AS builder
 
 # Install build dependencies (Go toolchain, git, CA certs)
