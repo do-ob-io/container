@@ -27,5 +27,5 @@ Run the full suite from this directory:
 SKIP_BUILD=1 ./test/test.sh structure   # reuse existing image tag
 ```
 
-`container-structure-test` is auto-downloaded into `test/.cache/` on first run
-if not already on `PATH`. `hadolint`, `docker`, and `curl` must be installed.
+`container-structure-test`, `hadolint`, `docker`, and `curl` must be installed
+and available on `PATH`.
