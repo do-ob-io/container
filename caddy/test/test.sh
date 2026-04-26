@@ -15,10 +15,9 @@
 #   ./test.sh lint         # run a single stage
 #   SKIP_BUILD=1 ./test.sh # reuse a previously built image tag
 #
-# Requirements: bash, docker, hadolint. container-structure-test is
-# auto-downloaded into .cache/ if it is not already on PATH. The smoke stage
-# uses a throwaway curl container (curlimages/curl) so the test works the
-# same whether run on a host or inside a dev container where the Docker
+# Requirements: bash, docker, hadolint, container-structure-test. The smoke
+# stage uses a throwaway curl container (curlimages/curl) so the test works
+# the same whether run on a host or inside a dev container where the Docker
 # daemon lives on a different network than the caller.
 
 set -euo pipefail
@@ -28,8 +27,6 @@ CONTEXT_DIR="$(cd "${HERE}/.." && pwd)"
 CONTAINERFILE="${CONTEXT_DIR}/Containerfile"
 IMAGE_TAG="${IMAGE_TAG:-do-ob/caddy:test}"
 CONTAINER_NAME="${CONTAINER_NAME:-do-ob-caddy-test}"
-CACHE_DIR="${HERE}/.cache"
-CST_VERSION="${CST_VERSION:-v1.19.3}"
 
 log()  { printf '\033[1;34m[test]\033[0m %s\n' "$*" >&2; }
 pass() { printf '\033[1;32m[ ok ]\033[0m %s\n' "$*" >&2; }
@@ -40,29 +37,6 @@ require() {
     fail "required command not found: $1"
     exit 127
   fi
-}
-
-ensure_cst() {
-  if command -v container-structure-test >/dev/null 2>&1; then
-    echo "container-structure-test"
-    return
-  fi
-  mkdir -p "${CACHE_DIR}"
-  local bin="${CACHE_DIR}/container-structure-test"
-  if [[ ! -x "${bin}" ]]; then
-    local os arch url
-    os="$(uname -s | tr '[:upper:]' '[:lower:]')"
-    case "$(uname -m)" in
-      x86_64|amd64) arch="amd64" ;;
-      aarch64|arm64) arch="arm64" ;;
-      *) fail "unsupported arch: $(uname -m)"; exit 1 ;;
-    esac
-    url="https://github.com/GoogleContainerTools/container-structure-test/releases/download/${CST_VERSION}/container-structure-test-${os}-${arch}"
-    log "downloading container-structure-test ${CST_VERSION} (${os}/${arch})"
-    curl -fsSL -o "${bin}" "${url}"
-    chmod +x "${bin}"
-  fi
-  echo "${bin}"
 }
 
 stage_lint() {
@@ -89,9 +63,8 @@ stage_build() {
 stage_structure() {
   log "structure: container-structure-test against ${IMAGE_TAG}"
   require docker
-  local cst
-  cst="$(ensure_cst)"
-  "${cst}" test \
+  require container-structure-test
+  container-structure-test test \
     --image "${IMAGE_TAG}" \
     --config "${HERE}/container-structure-test.yaml"
   pass "structure tests passed"
