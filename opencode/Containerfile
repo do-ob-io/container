@@ -5,9 +5,13 @@ FROM cgr.dev/chainguard/wolfi-base:latest
 # and the language toolchains use standard (non-musl) Linux builds.
 #   shadow  -> useradd/groupadd/usermod for the non-root user
 #   build-base, python3, nodejs, npm -> language toolchains and native builds
+#   curl, wget -> build-only download tools (uv/rustup/opencode installers);
+#                 removed from the final image below so they are unavailable at
+#                 runtime. ssh is intentionally never installed.
 # The remaining packages are best-effort shared libraries for the Playwright
 # browsers; apk coverage is not exhaustive (WebKit in particular may still need
-# additional libraries at runtime).
+# additional libraries at runtime). The common tools grep, cat, find, sed, rm,
+# mv, and ping are provided by the base busybox.
 RUN apk add --no-cache \
   bash \
   zsh \
@@ -62,6 +66,13 @@ WORKDIR /home/opencode
 # typescript + the Playwright CLI, and opencode (see setup.sh). Playwright
 # browsers are fetched lazily on first start by the entrypoint.
 RUN /usr/local/bin/setup.sh
+
+# Drop the network download tools now that the build is done so they are not
+# available in the running container. The required busybox tools (grep, cat,
+# find, sed, rm, mv, ping) remain; ssh was never installed.
+USER root
+RUN apk del curl wget
+USER opencode
 
 # The entrypoint lazily downloads Playwright browsers in the background on first
 # run, then execs opencode, passing through any subcommand and flags, e.g.:
