@@ -1,0 +1,63 @@
+# hadolint global ignore=DL3007,DL3018
+FROM cgr.dev/chainguard/wolfi-base:latest
+
+# Base runtime, build, and developer tooling. Wolfi is glibc-based, so opencode
+# and the language toolchains use standard (non-musl) Linux builds.
+#   shadow  -> useradd/groupadd/usermod for the non-root user
+#   build-base, python3, nodejs, npm -> language toolchains and native builds
+# The remaining packages are best-effort shared libraries for the Playwright
+# browsers; apk coverage is not exhaustive (WebKit in particular may still need
+# additional libraries at runtime).
+RUN apk add --no-cache \
+  bash \
+  zsh \
+  git \
+  git-lfs \
+  curl \
+  wget \
+  ca-certificates \
+  gzip \
+  unzip \
+  build-base \
+  shadow \
+  python3 \
+  python3-dev \
+  nodejs \
+  npm \
+  nss \
+  freetype \
+  harfbuzz \
+  glib \
+  gtk-3 \
+  cairo \
+  pango \
+  mesa \
+  dbus \
+  fontconfig
+
+# Non-root user matching the dev container conventions (uid/gid 1000).
+RUN groupadd --gid 1000 opencode \
+  && useradd --uid 1000 --gid 1000 --create-home --shell /bin/zsh opencode
+
+# Development tooling installer and runtime entrypoint, run/installed below.
+COPY --chown=opencode:opencode setup.sh /usr/local/bin/setup.sh
+COPY --chown=opencode:opencode entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod 0755 /usr/local/bin/setup.sh /usr/local/bin/entrypoint.sh
+
+ENV HOME=/home/opencode \
+  SHELL=/bin/zsh \
+  PATH=/home/opencode/.opencode/bin:/home/opencode/.cargo/bin:/home/opencode/.local/bin:/home/opencode/.npm-global/bin:/usr/local/bin:/usr/bin:/bin
+
+USER opencode
+WORKDIR /home/opencode
+
+# Install Oh My Zsh, uv + Python + ty/ruff, Rust + rust-analyzer, pnpm +
+# typescript + the Playwright CLI, and opencode (see setup.sh). Playwright
+# browsers are fetched lazily on first start by the entrypoint.
+RUN /usr/local/bin/setup.sh
+
+# The entrypoint lazily downloads Playwright browsers in the background on first
+# run, then execs opencode, passing through any subcommand and flags, e.g.:
+#   docker run --name opencode-web <image> web --hostname 0.0.0.0 --port 4096
+WORKDIR /home/opencode/workspace
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

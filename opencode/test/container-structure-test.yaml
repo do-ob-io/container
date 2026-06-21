@@ -1,0 +1,110 @@
+schemaVersion: '2.0.0'
+
+# Declarative tests for the built opencode container image.
+# Run via GoogleContainerTools/container-structure-test.
+# See: https://github.com/GoogleContainerTools/container-structure-test
+
+metadataTest:
+  entrypoint: ['/usr/local/bin/entrypoint.sh']
+  workdir: '/home/opencode/workspace'
+  user: 'opencode'
+  envVars:
+    - key: 'HOME'
+      value: '/home/opencode'
+    - key: 'SHELL'
+      value: '/bin/zsh'
+
+fileExistenceTests:
+  - name: 'opencode binary is installed'
+    path: '/home/opencode/.opencode/bin/opencode'
+    shouldExist: true
+  - name: 'entrypoint wrapper is installed'
+    path: '/usr/local/bin/entrypoint.sh'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: 'opencode config enables LSP'
+    path: '/home/opencode/.config/opencode/opencode.json'
+    shouldExist: true
+  - name: 'oh-my-zsh is installed'
+    path: '/home/opencode/.oh-my-zsh'
+    shouldExist: true
+  - name: 'default workspace exists'
+    path: '/home/opencode/workspace'
+    shouldExist: true
+
+fileContentTests:
+  - name: 'opencode config turns LSP on'
+    path: '/home/opencode/.config/opencode/opencode.json'
+    expectedContents: ['"lsp": true']
+
+commandTests:
+  - name: 'opencode reports a version'
+    command: 'opencode'
+    args: ['--version']
+    expectedOutput: ['[0-9]+\.[0-9]+\.[0-9]+']
+    exitCode: 0
+  - name: 'zsh is available'
+    command: 'zsh'
+    args: ['--version']
+    expectedOutput: ['zsh']
+    exitCode: 0
+  - name: 'git is available'
+    command: 'git'
+    args: ['--version']
+    expectedOutput: ['git version']
+    exitCode: 0
+  - name: 'git-lfs is available'
+    command: 'git-lfs'
+    args: ['version']
+    expectedOutput: ['git-lfs']
+    exitCode: 0
+  - name: 'uv is available'
+    command: 'uv'
+    args: ['--version']
+    expectedOutput: ['uv']
+    exitCode: 0
+  - name: 'ruff is available'
+    command: 'ruff'
+    args: ['--version']
+    expectedOutput: ['ruff']
+    exitCode: 0
+  - name: 'ty is available'
+    command: 'ty'
+    args: ['--version']
+    expectedOutput: ['ty']
+    exitCode: 0
+  - name: 'cargo is available'
+    command: 'cargo'
+    args: ['--version']
+    expectedOutput: ['cargo']
+    exitCode: 0
+  - name: 'rust-analyzer is available'
+    command: 'rust-analyzer'
+    args: ['--version']
+    expectedOutput: ['rust-analyzer']
+    exitCode: 0
+  - name: 'node is available'
+    command: 'node'
+    args: ['--version']
+    expectedOutput: ['v[0-9]+']
+    exitCode: 0
+  - name: 'pnpm is available'
+    command: 'pnpm'
+    args: ['--version']
+    expectedOutput: ['[0-9]+\.[0-9]+']
+    exitCode: 0
+  - name: 'typescript is available'
+    command: 'tsc'
+    args: ['--version']
+    expectedOutput: ['Version']
+    exitCode: 0
+  - name: 'playwright cli is available'
+    command: 'playwright'
+    args: ['--version']
+    expectedOutput: ['Version']
+    exitCode: 0
+  - name: 'python is available'
+    command: 'python3'
+    args: ['--version']
+    expectedOutput: ['Python 3']
+    exitCode: 0
