@@ -103,6 +103,11 @@ commandTests:
     args: ['--version']
     expectedOutput: ['Version']
     exitCode: 0
+  - name: 'xdg-open shim exits cleanly'
+    command: 'xdg-open'
+    args: ['http://localhost:4096']
+    expectedOutput: ['xdg-open \(headless\): http://localhost:4096']
+    exitCode: 0
   - name: 'python is available'
     command: 'python3'
     args: ['--version']

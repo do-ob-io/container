@@ -39,6 +39,13 @@ RUN apk add --no-cache \
 RUN groupadd --gid 1000 opencode \
   && useradd --uid 1000 --gid 1000 --create-home --shell /bin/zsh opencode
 
+# Headless no-op `xdg-open` shim. opencode tries to open the web UI in a local
+# browser (e.g. `xdg-open http://localhost:4096`), which has nowhere to go in a
+# container and otherwise crashes with ENOENT. The shim prints the URL instead
+# so it stays visible in the logs; reach the UI from the host browser.
+COPY xdg-open.sh /usr/local/bin/xdg-open
+RUN chmod 0755 /usr/local/bin/xdg-open
+
 # Development tooling installer and runtime entrypoint, run/installed below.
 COPY --chown=opencode:opencode setup.sh /usr/local/bin/setup.sh
 COPY --chown=opencode:opencode entrypoint.sh /usr/local/bin/entrypoint.sh
