@@ -5,9 +5,10 @@ FROM cgr.dev/chainguard/wolfi-base:latest
 # and the language toolchains use standard (non-musl) Linux builds.
 #   shadow  -> useradd/groupadd/usermod for the non-root user
 #   build-base, python3, nodejs, npm -> language toolchains and native builds
+#   openssh-client -> ssh client for cloning SSH git remotes
 #   curl, wget -> build-only download tools (uv/rustup/opencode installers);
 #                 removed from the final image below so they are unavailable at
-#                 runtime. ssh is intentionally never installed.
+#                 runtime.
 # The remaining packages are best-effort shared libraries for the Playwright
 # browsers; apk coverage is not exhaustive (WebKit in particular may still need
 # additional libraries at runtime). The common tools grep, cat, find, sed, rm,
@@ -17,6 +18,7 @@ RUN apk add --no-cache \
   zsh \
   git \
   git-lfs \
+  openssh-client \
   curl \
   wget \
   ca-certificates \
@@ -69,7 +71,7 @@ RUN /usr/local/bin/setup.sh
 
 # Drop the network download tools now that the build is done so they are not
 # available in the running container. The required busybox tools (grep, cat,
-# find, sed, rm, mv, ping) remain; ssh was never installed.
+# find, sed, rm, mv, ping) remain.
 USER root
 RUN apk del curl wget
 USER opencode
@@ -77,5 +79,5 @@ USER opencode
 # The entrypoint lazily downloads Playwright browsers in the background on first
 # run, then execs opencode, passing through any subcommand and flags, e.g.:
 #   docker run --name opencode-web <image> web --hostname 0.0.0.0 --port 4096
-WORKDIR /home/opencode/workspace
+WORKDIR /home/opencode/projects
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

@@ -6,7 +6,7 @@ schemaVersion: '2.0.0'
 
 metadataTest:
   entrypoint: ['/usr/local/bin/entrypoint.sh']
-  workdir: '/home/opencode/workspace'
+  workdir: '/home/opencode/projects'
   user: 'opencode'
   envVars:
     - key: 'HOME'
@@ -28,8 +28,8 @@ fileExistenceTests:
   - name: 'oh-my-zsh is installed'
     path: '/home/opencode/.oh-my-zsh'
     shouldExist: true
-  - name: 'default workspace exists'
-    path: '/home/opencode/workspace'
+  - name: 'default projects directory exists'
+    path: '/home/opencode/projects'
     shouldExist: true
   # Common tools must be available (provided by the base busybox).
   - name: 'grep is available'
@@ -53,19 +53,17 @@ fileExistenceTests:
   - name: 'ping is available'
     path: '/usr/bin/ping'
     shouldExist: true
-  # Network download / remote-access tools must NOT be available at runtime.
+  # Network download tools must NOT be available at runtime.
   - name: 'curl is not available'
     path: '/usr/bin/curl'
     shouldExist: false
   - name: 'wget is not available'
     path: '/usr/bin/wget'
     shouldExist: false
-  - name: 'ssh is not available (usr/bin)'
+  # ssh client is available for cloning SSH git remotes.
+  - name: 'ssh is available'
     path: '/usr/bin/ssh'
-    shouldExist: false
-  - name: 'ssh is not available (usr/local/bin)'
-    path: '/usr/local/bin/ssh'
-    shouldExist: false
+    shouldExist: true
 
 fileContentTests:
   - name: 'opencode config turns LSP on'

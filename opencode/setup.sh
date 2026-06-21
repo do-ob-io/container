@@ -79,8 +79,8 @@ cat > "${HOME}/.config/opencode/opencode.json" << 'JSON'
 JSON
 
 # ------------------------------------------------------------------------------
-# Default workspace
+# Default projects directory
 # ------------------------------------------------------------------------------
-mkdir -p "${HOME}/workspace"
+mkdir -p "${HOME}/projects"
 
 echo "============================== OPENCODE SETUP COMPLETE =============================="
