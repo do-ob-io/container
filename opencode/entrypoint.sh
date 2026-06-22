@@ -71,7 +71,8 @@ fi
 # ------------------------------------------------------------------------------
 mkdir -p "${HOME}/projects"
 
-declare -a project_dirs=()
+# Repositories cloned during THIS run; their setup.sh runs once, below.
+declare -a cloned_dirs=()
 index=0
 while true; do
   repo_var="REPOSITORY_${index}"
@@ -88,22 +89,24 @@ while true; do
   else
     echo "entrypoint: cloning ${repo_url} into ${repo_dir}"
     git clone "${repo_url}" "${repo_dir}"
+    cloned_dirs+=("${repo_dir}")
   fi
 
-  project_dirs+=("${repo_dir}")
   index=$((index + 1))
 done
 
 # ------------------------------------------------------------------------------
-# Optional per-project setup scripts
+# Per-project setup scripts (first clone only)
 #
-# For each cloned repository (in order, from REPOSITORY_0), run a root setup.sh
-# if present. Each script runs from within its own repository directory so its
-# relative paths resolve there. A non-zero exit is logged but does not stop
-# opencode from starting.
+# Run a repository's root setup.sh only when it was just cloned during this run,
+# in order from REPOSITORY_0. Repositories that already existed (e.g. a persisted
+# ~/projects volume) are left untouched, so the setup script never runs again on
+# subsequent starts. Each script runs from within its own repository directory
+# so its relative paths resolve there. A non-zero exit is logged but does not
+# stop opencode from starting.
 # ------------------------------------------------------------------------------
-if [ "${#project_dirs[@]}" -gt 0 ]; then
-  for repo_dir in "${project_dirs[@]}"; do
+if [ "${#cloned_dirs[@]}" -gt 0 ]; then
+  for repo_dir in "${cloned_dirs[@]}"; do
     if [ -f "${repo_dir}/setup.sh" ]; then
       echo "entrypoint: running setup script ${repo_dir}/setup.sh"
       ( cd "${repo_dir}" && bash setup.sh ) \

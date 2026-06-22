@@ -31,7 +31,10 @@ fileExistenceTests:
   - name: 'default projects directory exists'
     path: '/home/opencode/projects'
     shouldExist: true
-  # Common tools must be available (provided by the base busybox).
+  - name: 'global gitignore exists'
+    path: '/home/opencode/.gitignore'
+    shouldExist: true
+  # Common file/dev tools must be available.
   - name: 'grep is available'
     path: '/usr/bin/grep'
     shouldExist: true
@@ -53,13 +56,22 @@ fileExistenceTests:
   - name: 'ping is available'
     path: '/usr/bin/ping'
     shouldExist: true
-  # Network download tools must NOT be available at runtime.
-  - name: 'curl is not available'
+  - name: 'tree is available'
+    path: '/usr/bin/tree'
+    shouldExist: true
+  - name: 'lsof is available'
+    path: '/usr/bin/lsof'
+    shouldExist: true
+  - name: 'fd is available'
+    path: '/usr/bin/fd'
+    shouldExist: true
+  # Network download tools are available at runtime.
+  - name: 'curl is available'
     path: '/usr/bin/curl'
-    shouldExist: false
-  - name: 'wget is not available'
+    shouldExist: true
+  - name: 'wget is available'
     path: '/usr/bin/wget'
-    shouldExist: false
+    shouldExist: true
   # ssh client is available for cloning SSH git remotes.
   - name: 'ssh is available'
     path: '/usr/bin/ssh'

@@ -6,19 +6,24 @@ FROM cgr.dev/chainguard/wolfi-base:latest
 #   shadow  -> useradd/groupadd/usermod for the non-root user
 #   build-base, python3, nodejs, npm -> language toolchains and native builds
 #   openssh-client -> ssh client for cloning SSH git remotes
-#   curl, wget -> build-only download tools (uv/rustup/opencode installers);
-#                 removed from the final image below so they are unavailable at
-#                 runtime.
+#   grep, findutils, tree, lsof, fd -> developer/file CLIs (GNU grep and find
+#                 replace the limited busybox applets; fd provides glob matching)
+#   curl, wget -> download tools available at both build and runtime.
 # The remaining packages are best-effort shared libraries for the Playwright
 # browsers; apk coverage is not exhaustive (WebKit in particular may still need
-# additional libraries at runtime). The common tools grep, cat, find, sed, rm,
-# mv, and ping are provided by the base busybox.
+# additional libraries at runtime). The common tools cat, sed, rm, mv, and ping
+# are provided by the base busybox.
 RUN apk add --no-cache \
   bash \
   zsh \
   git \
   git-lfs \
   openssh-client \
+  grep \
+  findutils \
+  tree \
+  lsof \
+  fd \
   curl \
   wget \
   ca-certificates \
@@ -64,17 +69,14 @@ ENV HOME=/home/opencode \
 USER opencode
 WORKDIR /home/opencode
 
+# Empty global gitignore; add patterns here or by mounting a .gitignore at runtime.
+RUN touch /home/opencode/.gitignore \
+  && git config --global core.excludesFile /home/opencode/.gitignore
+
 # Install Oh My Zsh, uv + Python + ty/ruff, Rust + rust-analyzer, pnpm +
 # typescript + the Playwright CLI, and opencode (see setup.sh). Playwright
 # browsers are fetched lazily on first start by the entrypoint.
 RUN /usr/local/bin/setup.sh
-
-# Drop the network download tools now that the build is done so they are not
-# available in the running container. The required busybox tools (grep, cat,
-# find, sed, rm, mv, ping) remain.
-USER root
-RUN apk del curl wget
-USER opencode
 
 # The entrypoint lazily downloads Playwright browsers in the background on first
 # run, then execs opencode, passing through any subcommand and flags, e.g.:
